@@ -1,0 +1,1 @@
+Please place Dolby Audio library's header files dlb_decode_api.h and dlb_buffer.h here.

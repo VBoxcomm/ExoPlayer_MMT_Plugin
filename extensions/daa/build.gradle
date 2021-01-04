@@ -1,0 +1,83 @@
+// Copyright (C) 2018 The Android Open Source Project
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+apply from: '../../constants.gradle'
+apply plugin: 'com.android.library'
+
+android {
+    compileSdkVersion project.ext.compileSdkVersion
+//    buildToolsVersion project.ext.buildToolsVersion
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    defaultConfig {
+        // Note: Minimum SDK version requirement for DAA ARMv8 lib.
+        //       If DAA ARMv7 library is used only, use "project.ext.minSdkVersion".
+        minSdkVersion 23
+        // minSdkVersion project.ext.minSdkVersion
+        targetSdkVersion project.ext.targetSdkVersion
+        consumerProguardFiles 'proguard-rules.txt'
+        versionCode 1
+        versionName "1.0"
+
+        externalNativeBuild {
+            cmake {
+                // arguments '-DANDROID_STL=c++_static'
+                cppFlags "-std=c++11"
+            }
+            ndkBuild {
+                abiFilters "armeabi-v7a","arm64-v8a"
+            }
+        }
+        ndk {
+            abiFilters "armeabi-v7a","arm64-v8a"
+        }
+    }
+    sourceSets.main {
+        jni.srcDirs = ['src/main/jni'] // Enable the automatic ndk-build call by Android Studio.
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+        debug {
+            minifyEnabled false
+        }
+    }
+    // Encapsulates your external native build configurations.
+    externalNativeBuild {
+        ndkBuild {
+            path 'src/main/jni/Android.mk'  // path "CMakeLists.txt"
+        }
+    }
+}
+
+dependencies {
+    implementation project(modulePrefix + 'library-core')
+    implementation project(path: ':exoplayer-extension-mmt')
+    implementation project(path: ':exoplayer-extension-mmt')
+}
+ext {
+    javadocTitle = 'DAA extension'
+}
+apply from: '../../javadoc_library.gradle'
+
+ext {
+    releaseArtifact = 'exoplayer-daa'
+    releaseDescription = 'The ExoPlayer extension DAA module.'
+}
+apply from: '../../publish.gradle'

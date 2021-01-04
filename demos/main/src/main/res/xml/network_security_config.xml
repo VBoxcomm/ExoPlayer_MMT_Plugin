@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- DOLBY_START -->
+<network-security-config>
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="true">bjo-disc.dolby.net</domain>
+    </domain-config>
+</network-security-config>
+<!-- DOLBY_END -->
