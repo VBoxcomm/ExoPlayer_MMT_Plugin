@@ -744,6 +744,11 @@ public class MediaCodecVideoRenderer extends MediaCodecRenderer {
       return false;
     } else if (shouldDropOutputBuffer(earlyUs, elapsedRealtimeUs, isLastBuffer)) {
       dropOutputBuffer(codec, bufferIndex, presentationTimeUs);
+      Log.d("MediaCodecVideoRenderer",String.format("JJ: processOutputBuffer, dropOutputBuffer with: bufferIndex: %d, presentationTimeUs: %d, earlyUs: %d, elapsedRealtimeUs: %d, isLastBuffer: %b",
+              bufferIndex,
+              presentationTimeUs,
+              earlyUs, elapsedRealtimeUs, isLastBuffer));
+
       return true;
     }
 
@@ -752,6 +757,10 @@ public class MediaCodecVideoRenderer extends MediaCodecRenderer {
       if (earlyUs < 50000) {
         notifyFrameMetadataListener(presentationTimeUs, adjustedReleaseTimeNs, format);
         renderOutputBufferV21(codec, bufferIndex, presentationTimeUs, adjustedReleaseTimeNs);
+        Log.d("MediaCodecVideoRenderer",String.format("JJ: renderOutputBufferV21, bufferIndex: %d, presentationTimeUs: %d, adjustedReleaseTimeNs: %d, earlyUs: %d", bufferIndex,
+                presentationTimeUs,
+                adjustedReleaseTimeNs,
+                earlyUs));
         return true;
       }
     } else {

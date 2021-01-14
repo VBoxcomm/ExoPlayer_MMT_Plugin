@@ -81,7 +81,8 @@ public abstract class SimpleSubtitleDecoder extends
       outputBuffer.clearFlag(C.BUFFER_FLAG_DECODE_ONLY);
       return null;
     } catch (SubtitleDecoderException e) {
-      return e;
+      //jjustman-2020-12-30 - HACK - instead of return e;
+      return null;
     }
   }
 

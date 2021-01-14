@@ -186,6 +186,10 @@ public final class MMTMediaPeriod
         durationUs = C.TIME_UNSET;
         dataType = C.DATA_TYPE_MEDIA;
         eventDispatcher.mediaPeriodCreated();
+
+        //jjustman-2021-01-13 - TODO: fixup for resetting MMTExtractor.SystemClockAnchor/MfuClockAnchor
+        MMTExtractor.SystemClockAnchor = 0;
+        MMTExtractor.MfuClockAnchor = 0;
     }
 
     public void release() {

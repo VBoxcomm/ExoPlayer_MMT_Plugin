@@ -128,7 +128,8 @@ public class MMTRenderersFactory extends DefaultRenderersFactory {
         try {
             // Full class names used for constructor args so the LINT rule triggers if any of them move.
             // LINT.IfChange
-            Class<?> clazz = Class.forName("com.dolby.daa.LibDaaAudioRenderer");
+            //jjustman-2021-01-13 - special subclass instance of Dolby AC-4 SystemClockSynchronized only for MMT playback
+            Class<?> clazz = Class.forName("com.dolby.daa.SystemClockSynchronizedLibDaaAudioRenderer");
             Constructor<?> constructor =
                     clazz.getConstructor(
                             android.os.Handler.class,
@@ -138,10 +139,10 @@ public class MMTRenderersFactory extends DefaultRenderersFactory {
             Renderer renderer =
                     (Renderer) constructor.newInstance(eventHandler, eventListener, audioProcessors);
             out.add(extensionRendererIndex++, renderer);
-            Log.i(TAG, "Loaded LibDaaAudioRenderer.");
+            Log.i(TAG, "Loaded SystemClockSynchronizedLibDaaAudioRenderer.");
         } catch (ClassNotFoundException e) {
             // Expected if the app was built without the extension.
-            Log.i(TAG, "Error instantiating LibDaaAudioRenderer, ex:"+e);
+            Log.i(TAG, "Error instantiating SystemClockSynchronizedLibDaaAudioRenderer, ex:"+e);
         } catch (Exception e) {
             // The extension is present, but instantiation failed.
             throw new RuntimeException("Error instantiating DAA extension", e);

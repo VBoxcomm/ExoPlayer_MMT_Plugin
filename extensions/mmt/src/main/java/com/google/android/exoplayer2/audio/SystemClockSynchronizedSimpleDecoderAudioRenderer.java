@@ -115,6 +115,9 @@ public abstract class SystemClockSynchronizedSimpleDecoderAudioRenderer extends 
           ? extends AudioDecoderException> decoder;
   private DecoderInputBuffer inputBuffer;
   private SimpleOutputBuffer outputBuffer;
+
+  private SimpleOutputBuffer lastAudioSinkOutputBufferNotCompleted = null;
+
   @Nullable private DrmSession<ExoMediaCrypto> decoderDrmSession;
   @Nullable private DrmSession<ExoMediaCrypto> sourceDrmSession;
 
@@ -418,13 +421,15 @@ public abstract class SystemClockSynchronizedSimpleDecoderAudioRenderer extends 
     //jjustman-2021-01-04 - hold output buffer if it is ahead by more than 66ms, discard if it is behind by more than 66 ms, otherwise release
     if((outputBuffer.timeUs - myPositionUs) > 66000) {
       //HOLD this output buffer
-      Log.d("SystemClockSynchronizedSimpleDecoderAudioRenderer", String.format("drainOutputBuffer: sync: holding output buffer, outputBuffer.timeUs: %d, myPositionUs: %d, diff: %d", outputBuffer.timeUs, myPositionUs, (outputBuffer.timeUs - myPositionUs)));
+      Log.d("SystemClockSynchronizedSimpleDecoderAudioRenderer", String.format("drainOutputBuffer: sync: holding output buffer,   outputBuffer.timeUs: %d, myPositionUs: %d, diff: %d", outputBuffer.timeUs, myPositionUs, (outputBuffer.timeUs - myPositionUs)));
       return false;
-    } else if((outputBuffer.timeUs - myPositionUs) < -66000) {
-        Log.d("SystemClockSynchronizedSimpleDecoderAudioRenderer", String.format("drainOutputBuffer: sync: discarding output buffer, outputBuffer.timeUs: %d, myPositionUs: %d, diff: %d", outputBuffer.timeUs, myPositionUs, (outputBuffer.timeUs - myPositionUs)));
-        outputBuffer.release();
-        outputBuffer = null;
-        return true;
+    } else if(lastAudioSinkOutputBufferNotCompleted == null && (outputBuffer.timeUs - myPositionUs) < 0) {
+      //jjustman-2021-01-13 - do not release/null an output buffer that was handed to audioSink that is not completed (e.g. has remaining data, returned false from handleBuffer)
+      //release this output buffer sample, as it would fall behind our audioSink's expected release time
+      Log.d("SystemClockSynchronizedSimpleDecoderAudioRenderer", String.format("drainOutputBuffer: sync: discarding output buffer, outputBuffer.timeUs: %d, myPositionUs: %d, diff: %d", outputBuffer.timeUs, myPositionUs, (outputBuffer.timeUs - myPositionUs)));
+      outputBuffer.release();
+      outputBuffer = null;
+      return true;
     } else {
       if (audioSink.handleBuffer(outputBuffer.data, outputBuffer.timeUs)) {
         Log.d("SystemClockSynchronizedSimpleDecoderAudioRenderer", String.format("drainOutputBuffer: sync: releasing output buffer, outputBuffer.timeUs: %d, myPositionUs: %d, diff: %d", outputBuffer.timeUs, myPositionUs, (outputBuffer.timeUs - myPositionUs)));
@@ -433,10 +438,14 @@ public abstract class SystemClockSynchronizedSimpleDecoderAudioRenderer extends 
 
         outputBuffer.release();
         outputBuffer = null;
+        lastAudioSinkOutputBufferNotCompleted = null;
+
         return true;
       } else {
-        Log.d("SystemClockSynchronizedSimpleDecoderAudioRenderer", String.format("drainOutputBuffer: sync: FAILED: unable to release output buffer, outputBuffer.timeUs: %d, myPositionUs: %d, diff: ", outputBuffer.timeUs, myPositionUs, (outputBuffer.timeUs - myPositionUs)));
+        //Log.d("SystemClockSynchronizedSimpleDecoderAudioRenderer", String.format("drainOutputBuffer: sync: incomplete: unable to release output buffer, outputBuffer.timeUs: %d, myPositionUs: %d, diff: %d", outputBuffer.timeUs, myPositionUs, (outputBuffer.timeUs - myPositionUs)));
 
+        //jjustman-2021-01-13 - do not release/null an output buffer that was handed to audioSink that is not completed (e.g. has remaining data, returned false from handleBuffer)
+        lastAudioSinkOutputBufferNotCompleted = outputBuffer;
       }
     }
     return false;
@@ -456,6 +465,16 @@ public abstract class SystemClockSynchronizedSimpleDecoderAudioRenderer extends 
         return false;
       }
     }
+
+//    //jjustman-2021-01-13 - check inputBuffer timestamp to see if it is too far behind
+//    long myPositionUs = getPositionUs();
+//    if(inputBuffer.timeUs > 0 && (inputBuffer.timeUs - myPositionUs) < 0) {
+//      //release this output buffer sample, as it would fall behind our audioSink's expected release time
+//      Log.d("SystemClockSynchronizedSimpleDecoderAudioRenderer", String.format("dequeueInputBuffer: sync: discarding input buffer, inputBuffer.timeUs: %d, myPositionUs: %d, diff: %d", inputBuffer.timeUs, myPositionUs, (inputBuffer.timeUs - myPositionUs)));
+//      inputBuffer.clear();
+//      inputBuffer = null;
+//      return true;
+//    }
 
     if (decoderReinitializationState == REINITIALIZATION_STATE_SIGNAL_END_OF_STREAM) {
       inputBuffer.setFlags(C.BUFFER_FLAG_END_OF_STREAM);
