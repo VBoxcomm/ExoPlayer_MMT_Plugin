@@ -61,5 +61,6 @@ Sample Activity (kotlin):
 ## Links ##
 
 ## Release Notes ##
-2021-01-13 - version 0.2 - additional synchronization fixes for a/v with lossy mmt reception, adding libdaa impl for systemClockSynchronizedLibDaaAudioRenderer 
+2021-01-13 - version 0.2 - additional synchronization fixes for a/v with lossy mmt reception, adding libdaa impl for systemClockSynchronizedLibDaaAudioRenderer
+
 2020-12-22 - version 0.1 - jjustman@nbgp.org
